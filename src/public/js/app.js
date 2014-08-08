@@ -1,4 +1,4 @@
-var myModule = angular.module('myModule', []);
+var myModule = angular.module('myModule', ['ui.bootstrap']);
 
 myModule.factory('MyService', ['$rootScope', function($rootScope) {
   var Service = {};
@@ -14,6 +14,10 @@ myModule.factory('MyService', ['$rootScope', function($rootScope) {
     $rootScope.$apply(function() {
       Service.messages.push(event.data);
     });
+  }
+
+  ws.onclose = function(event) {
+    console.log("connection closed");
   }
 
   Service.send = function(msg) {
