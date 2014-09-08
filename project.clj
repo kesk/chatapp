@@ -10,7 +10,9 @@
                  [compojure "1.1.5"]
                  [http-kit "2.1.16"]
                  [org.clojure/tools.logging "0.3.0"]
-                 [ch.qos.logback/logback-classic "1.1.1"]]
+                 [ch.qos.logback/logback-classic "1.1.1"]
+                 [org.clojure/data.json "0.2.5"]
+                 [selmer "0.6.9"]]
   :main grooming.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

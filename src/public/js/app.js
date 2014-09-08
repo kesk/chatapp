@@ -1,6 +1,6 @@
 var myModule = angular.module('myModule', ['ui.bootstrap']);
 
-myModule.factory('MyService', ['$rootScope', function($rootScope) {
+myModule.factory('SocketService', function($rootScope) {
   var Service = {};
   Service.messages = [];
 
@@ -25,13 +25,13 @@ myModule.factory('MyService', ['$rootScope', function($rootScope) {
   }
 
   return Service;
-}]);
+});
 
-myModule.controller('MyCtrl', function($scope, MyService) {
-  $scope.messages = MyService.messages;
+myModule.controller('MyCtrl', function($scope, SocketService) {
+  $scope.messages = SocketService.messages;
 
   $scope.sendMessage = function() {
-    MyService.send($scope.enteredName + ": " + $scope.enteredMessage);
+    SocketService.send($scope.enteredName + ": " + $scope.enteredMessage);
     $scope.enteredMessage = "";
   }
 });

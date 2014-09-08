@@ -7,37 +7,49 @@
             [ring.util.response :as response]
             (compojure [handler :as handler]
                        [route :as route])
-            [clojure.tools.logging :as log]))
+            [clojure.tools.logging :as log]
+            [clojure.data.json :as json]
+            [selmer.parser :as selmer]))
 
 (def json-header {"Content-Type" "application/json; charset=utf-8"})
 (def text-header {"Content-Type" "text/plain; charset=utf-8"})
+(def html-header {"Content-Type" "text/html; charset=utf-8"})
 
 (def open-channels (atom {}))
 
-(defn com-channel [request]
-  (httpkit/with-channel request channel
-    (swap! open-channels assoc channel request)
-    (log/info "Channel opened.")
-    (httpkit/on-close channel (fn [status]
-                                (log/info "Channel closed: " status)
-                                (swap! open-channels dissoc channel)))
-    (httpkit/on-receive channel (fn [data]
-                                  #_(httpkit/send! channel data)
-                                  (broadcast data)))))
+(def grooming (atom []))
 
 (defn broadcast
   [msg]
   (doseq [channel (keys @open-channels)]
     (httpkit/send! channel {:status 200
-                            :headers text-header
+                            :headers json-header
                             :body msg})))
+
+(defn com-channel [request]
+  (httpkit/with-channel request channel
+    (swap! open-channels assoc channel request)
+    (log/info "Channel opened: " request)
+    (httpkit/on-close channel (fn [status]
+                                (log/info "Channel closed: " status)
+                                (swap! open-channels dissoc channel)))
+    (httpkit/on-receive channel (fn [data]
+                                  (broadcast data)))))
+
+(defn session-handler
+  [request]
+  #_(pprint request)
+  (let [session (:session (assoc-in request [:session :name] "foo"))]
+    {:status 200
+     :headers html-header
+     :body (str "Counter: " (:counter session))
+     :session session}))
 
 (defroutes app-routes
   (GET "/" [] (response/resource-response "index.html" {:root "public"}))
   (GET "/com-channel" [] com-channel)
-  (GET "/test" [] (do
-                    (broadcast "test")
-                    "sent message!"))
+  (GET "/selmer-test" [] (selmer/render-file "public/test.html" {:foobar "SELMER!!"}))
+  (POST "/session" [user-name] (str "Hello " user-name "!"))
   (route/resources "")
   (route/not-found "<p>Page not found.</p>"))
 
