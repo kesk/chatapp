@@ -1,7 +1,9 @@
 (ns grooming.core
   (:gen-class)
   (:use [compojure.core :only [defroutes GET POST]]
-        [clojure.pprint :only [pprint]])
+        [clojure.pprint :only [pprint]]
+        [environ.core :only [env]]
+        [selmer.middleware :only [wrap-error-page]])
   (:require [org.httpkit.server :as httpkit]
             [ring.middleware.reload :as reload]
             [ring.util.response :as response]
@@ -45,24 +47,48 @@
      :body (str "Counter: " (:counter session))
      :session session}))
 
+(defn render-template
+  [tname args]
+  (selmer/render-file (str "templates/" tname) args {:tag-open \[, :tag-close \]}))
+
 (defroutes app-routes
-  (GET "/" [] (response/resource-response "index.html" {:root "public"}))
+  (GET "/" [] (render-template "login.html" {}))
   (GET "/com-channel" [] com-channel)
   (GET "/selmer-test" [] (selmer/render-file "public/test.html" {:foobar "SELMER!!"}))
   (POST "/session" [user-name] (str "Hello " user-name "!"))
-  (route/resources "")
+  (route/resources "/static")
   (route/not-found "<p>Page not found.</p>"))
 
 (defn in-dev? [& args] true)
 
+(defn- wrap-request-logging
+  [handler]
+  (fn [{:keys [request-method uri] :as req}]
+    (let [resp (handler req)]
+      (log/info (name request-method) (:status resp)
+            (if-let [qs (:query-string req)]
+              (str uri "?" qs) uri))
+      resp)))
+
+(defn- wrap-print-request
+  [handler]
+  (fn [request]
+    (println request)
+    (handler request)))
+
 (def app (-> app-routes
-             handler/site))
+             handler/site
+             wrap-request-logging
+             reload/wrap-reload
+             #_wrap-print-request
+             (cond-> (env :dev) wrap-error-page)))
 
 (defn -main
   [& args]
-  (let [request-handler (if (in-dev? args)
-                          (reload/wrap-reload #'app)
-                          app)]
-    (log/info "Starting server...")
-    (httpkit/run-server request-handler {:port 8080})
-    (log/info "Server started.")))
+  (if (env :dev) (log/warn "DEVELOPMENT ENVIRONMENT"))
+  (log/info "Starting server...")
+  (let [handler (if (env :dev)
+                  (reload/wrap-reload #'app)
+                  app)]
+    (httpkit/run-server handler {:port 8080}))
+  (log/info "Server started."))

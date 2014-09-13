@@ -12,7 +12,8 @@
                  [org.clojure/tools.logging "0.3.0"]
                  [ch.qos.logback/logback-classic "1.1.1"]
                  [org.clojure/data.json "0.2.5"]
-                 [selmer "0.6.9"]]
+                 [selmer "0.6.9"]
+                 [environ "1.0.0"]]
   :main grooming.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
