@@ -1,9 +1,16 @@
 [% extends "templates/base.html" %]
 [% block content %]
-<div class="greeter">
-    <form action="/session" method="post">
-        <input name="user-name" type="text" placeholder="Enter a name here"><br/>
-        <button name="submit" type="submit" class="btn btn-info" style="margin: 10px">Enter</button>
-    </form>
+<div ng-app="myModule">
+    <div ng-controller="MyCtrl">
+        <form ng-submit="sendMessage()">
+            <input type="text" class="form-control" ng-model="enteredMessage" placeholder="Enter message here">
+            <button type="submit" class="btn btn-info">Submit</button>
+        </form>
+        <ul>
+            <li ng-repeat="msg in messages track by $index">
+                {{msg}}
+            </li>
+        </ul>
+    </div>
 </div>
 [% endblock %]

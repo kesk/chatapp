@@ -1,42 +1,27 @@
 (ns grooming.core
-  (:gen-class)
-  (:use [compojure.core :only [defroutes GET POST]]
+  #_(:gen-class)
+  (:use [grooming.common]
+        [compojure.core :only [defroutes GET POST]]
         [clojure.pprint :only [pprint]]
         [environ.core :only [env]]
         [selmer.middleware :only [wrap-error-page]])
   (:require [org.httpkit.server :as httpkit]
-            [ring.middleware.reload :as reload]
+            (ring.middleware [reload :refer [wrap-reload]]
+                             [flash :refer [wrap-flash]]
+                             [cookies :refer [wrap-cookies]]
+                             [multipart-params :refer [wrap-multipart-params]]
+                             [params :refer [wrap-params]]
+                             [nested-params :refer [wrap-nested-params]]
+                             [keyword-params :refer [wrap-keyword-params]])
             [ring.util.response :as response]
-            (compojure [handler :as handler]
+            (compojure [core :as compojure]
+                       [handler :as handler]
                        [route :as route])
             [clojure.tools.logging :as log]
             [clojure.data.json :as json]
-            [selmer.parser :as selmer]))
-
-(def json-header {"Content-Type" "application/json; charset=utf-8"})
-(def text-header {"Content-Type" "text/plain; charset=utf-8"})
-(def html-header {"Content-Type" "text/html; charset=utf-8"})
-
-(def open-channels (atom {}))
-
-(def grooming (atom []))
-
-(defn broadcast
-  [msg]
-  (doseq [channel (keys @open-channels)]
-    (httpkit/send! channel {:status 200
-                            :headers json-header
-                            :body msg})))
-
-(defn com-channel [request]
-  (httpkit/with-channel request channel
-    (swap! open-channels assoc channel request)
-    (log/info "Channel opened: " request)
-    (httpkit/on-close channel (fn [status]
-                                (log/info "Channel closed: " status)
-                                (swap! open-channels dissoc channel)))
-    (httpkit/on-receive channel (fn [data]
-                                  (broadcast data)))))
+            [selmer.parser :as selmer]
+            [grooming.chat :as chat]
+            [sandbar.stateful-session :refer [wrap-stateful-session]]))
 
 (defn session-handler
   [request]
@@ -47,15 +32,9 @@
      :body (str "Counter: " (:counter session))
      :session session}))
 
-(defn render-template
-  [tname args]
-  (selmer/render-file (str "templates/" tname) args {:tag-open \[, :tag-close \]}))
-
 (defroutes app-routes
   (GET "/" [] (render-template "login.html" {}))
-  (GET "/com-channel" [] com-channel)
-  (GET "/selmer-test" [] (selmer/render-file "public/test.html" {:foobar "SELMER!!"}))
-  (POST "/session" [user-name] (str "Hello " user-name "!"))
+  (compojure/context "/chat" [] (chat/chat-routes))
   (route/resources "/static")
   (route/not-found "<p>Page not found.</p>"))
 
@@ -73,22 +52,29 @@
 (defn- wrap-print-request
   [handler]
   (fn [request]
-    (println request)
+    (pprint request)
     (handler request)))
 
 (def app (-> app-routes
-             handler/site
+             wrap-stateful-session
+             wrap-flash
+             wrap-cookies
+             wrap-multipart-params
+             wrap-params
+             wrap-nested-params
+             wrap-keyword-params
              wrap-request-logging
-             reload/wrap-reload
              #_wrap-print-request
              (cond-> (env :dev) wrap-error-page)))
 
 (defn -main
   [& args]
-  (if (env :dev) (log/warn "DEVELOPMENT ENVIRONMENT"))
+  (if (env :dev) (do
+                   (log/warn "DEVELOPMENT ENVIRONMENT")
+                   (selmer/cache-off!)))
   (log/info "Starting server...")
   (let [handler (if (env :dev)
-                  (reload/wrap-reload #'app)
+                  (wrap-reload #'app)
                   app)]
     (httpkit/run-server handler {:port 8080}))
   (log/info "Server started."))

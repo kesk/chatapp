@@ -1,8 +1,8 @@
 [% extends "templates/base.html" %]
 [% block content %]
 <div class="greeter">
-    <form action="/session" method="post">
-        <input name="user-name" type="text" placeholder="Enter a name here"><br/>
+    <form action="/chat" method="post">
+        <input name="username" type="text" placeholder="Enter a name here"><br/>
         <button name="submit" type="submit" class="btn btn-info" style="margin: 10px">Enter</button>
     </form>
 </div>

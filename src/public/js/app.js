@@ -4,7 +4,7 @@ myModule.factory('SocketService', function($rootScope) {
   var Service = {};
   Service.messages = [];
 
-  var ws = new WebSocket("ws://127.0.0.1:8080/com-channel");
+  var ws = new WebSocket("ws://127.0.0.1:8080/chat/socket");
 
   ws.onopen = function() {
     console.log("connection established ...");
@@ -31,7 +31,7 @@ myModule.controller('MyCtrl', function($scope, SocketService) {
   $scope.messages = SocketService.messages;
 
   $scope.sendMessage = function() {
-    SocketService.send($scope.enteredName + ": " + $scope.enteredMessage);
+    SocketService.send($scope.enteredMessage);
     $scope.enteredMessage = "";
   }
 });
