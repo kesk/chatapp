@@ -1,8 +1,7 @@
-var myModule = angular.module('myModule', ['ui.bootstrap']);
+angular.module('myModule', ['ui.bootstrap'])
 
-myModule.factory('SocketService', function($rootScope) {
-  var Service = {};
-  Service.messages = [];
+.controller('MyCtrl', function($scope) {
+  $scope.messages = [];
 
   var ws = new WebSocket("ws://127.0.0.1:8080/chat/socket");
 
@@ -11,27 +10,25 @@ myModule.factory('SocketService', function($rootScope) {
   }
 
   ws.onmessage = function(event) {
-    $rootScope.$apply(function() {
-      Service.messages.push(event.data);
+    var data = JSON.parse(event.data);
+    var username = data['username'];
+    var message = data['message'];
+
+    $scope.$apply(function() {
+      $scope.messages.push(username + ": " + message);
     });
   }
 
   ws.onclose = function(event) {
-    console.log("connection closed");
+    console.log("Connection closed");
   }
-
-  Service.send = function(msg) {
-    ws.send(msg);
-  }
-
-  return Service;
-});
-
-myModule.controller('MyCtrl', function($scope, SocketService) {
-  $scope.messages = SocketService.messages;
 
   $scope.sendMessage = function() {
-    SocketService.send($scope.enteredMessage);
+    var message = {
+      message: $scope.enteredMessage,
+    }
+
+    ws.send(JSON.stringify(message));
     $scope.enteredMessage = "";
   }
 });

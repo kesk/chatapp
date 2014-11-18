@@ -14,7 +14,7 @@
                  [org.clojure/data.json "0.2.5"]
                  [selmer "0.6.9"]
                  [environ "1.0.0"]
-                 [sandbar/sandbar "0.4.0-SNAPSHOT"]]
+                 [com.cemerick/friend "0.2.1"]]
   :main grooming.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

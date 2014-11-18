@@ -1,22 +1,25 @@
 (ns grooming.chat
   (:use [grooming.common])
   (:require [org.httpkit.server :as httpkit]
-            [compojure.core :refer [routes ANY GET POST]]
+            [compojure.core :refer [routes defroutes ANY GET POST]]
             [ring.util.response :as response]
             [clojure.tools.logging :as log]
             [clojure.pprint :refer [pprint]]
-            [sandbar.stateful-session :refer [session-put! session-get]]
-            [selmer.parser :as selmer]))
+            [selmer.parser :as selmer]
+            [clojure.data.json :as json]))
 
 (def chatrooms (atom {}))
 (def open-sockets (atom {}))
 
+(defn- get-username
+  [request]
+    (get-in request [:session :username]))
+
 (defn broadcast
-  [msg]
-  (doseq [channel (keys @open-sockets)]
-    (httpkit/send! channel {:status 200
-                            :headers json-header
-                            :body msg})))
+  "Broadcast a message on all channels."
+  [data]
+  (doseq [channel (vals @open-sockets)]
+    (httpkit/send! channel (json-response data))))
 
 (defn- add-channel
   [chatroom channel]
@@ -26,30 +29,29 @@
            (conj room channel)
            [channel])))
 
-(defn web-socket
+(defn- web-socket
   [request]
+  (log/debug (with-out-str (pprint (:session request))))
   (httpkit/with-channel request channel
-    (swap! open-sockets assoc channel request)
-    (add-channel (session-get :chatroom) channel)
-    (log/info (str "Channel opened for chatroom: "
-                   (session-get :chatroom "ERROR: No chat room in session")))
+    (let [username (get-username request)]
+      (swap! open-sockets assoc username channel))
     (httpkit/on-close channel (fn [status]
                                 (log/info "Channel closed: " status)
                                 (swap! open-sockets dissoc channel)))
     (httpkit/on-receive channel (fn [data]
-                                  (broadcast data)))))
+                                  (let [data (json/read-str data)
+                                        username (-> request :session :username)]
+                                    (broadcast (assoc data :username username)))))))
 
-(defn join-chat
+(defn- join-chat
   [request]
-  (if-let [username (get-in request [:params "username"])]
-    (do
-      (session-put! :username username)
-      (session-put! :chatroot "lobby")
-      (render-template "chat.html" {}))
-    (response/redirect "/")))
+  (let [session (:session request)
+        username (:username session)]
+    (-> (response/response (render-template "chat.html" {:username username}))
+        (response/content-type "text/html; charset=utf-8")
+        (assoc :session session))))
 
-(defn chat-routes
-  []
-  (routes
-   (POST "/" [] join-chat)
-   (GET "/socket" [] web-socket)))
+(defroutes chat-routes
+  (POST "/" request (join-chat request))
+  (GET "/" request (join-chat request))
+  (GET "/socket" [] web-socket))

@@ -1,5 +1,6 @@
 [% extends "templates/base.html" %]
 [% block content %]
+<p>Welcome to the chat [{username}]!</p>
 <div ng-app="myModule">
     <div ng-controller="MyCtrl">
         <form ng-submit="sendMessage()">
@@ -14,3 +15,4 @@
     </div>
 </div>
 [% endblock %]
+
