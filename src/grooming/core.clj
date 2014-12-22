@@ -9,7 +9,8 @@
             (ring.middleware [reload :refer [wrap-reload]]
                              [params :refer [wrap-params]]
                              [keyword-params :refer [wrap-keyword-params]]
-                             [session :refer [wrap-session]])
+                             [session :refer [wrap-session]]
+                             [cookies :refer [wrap-cookies]])
             [ring.util.response :as response]
             (compojure [core :as compojure]
                        [handler :as handler]
@@ -54,8 +55,9 @@
       resp)))
 
 (def app (-> app-routes
-             wrap-request-logging
              #_wrap-print-request
+             wrap-request-logging
+             wrap-cookies
              wrap-session
              wrap-keyword-params
              wrap-params

@@ -9,39 +9,49 @@
             [clojure.data.json :as json]))
 
 (def chatrooms (atom {}))
-(def open-sockets (atom {}))
+(def open-channels (atom {}))
 
 (defn- get-username
   [request]
     (get-in request [:session :username]))
 
 (defn broadcast
-  "Broadcast a message on all channels."
+  "Broadcast a message on all sockets."
   [data]
-  (doseq [channel (vals @open-sockets)]
+  (doseq [channel (vals @open-channels)]
     (httpkit/send! channel (json-response data))))
 
 (defn- add-channel
-  [chatroom channel]
-  (swap! chatrooms assoc
-         chatroom
-         (if-let [room (@chatrooms chatroom)]
-           (conj room channel)
-           [channel])))
+  "Save channel in channel atom"
+  [session channel]
+  ;Close any already open channels
+  (if-let [channel (get @open-channels session)]
+    (httpkit/close channel))
+  (swap! open-channels assoc session channel))
+
+(defmulti handle-input
+  (fn [session data]
+    (keyword (:type data))))
+
+(defmethod handle-input :message
+  [{username :username} data]
+  (broadcast (assoc data :username username)))
+
+(defmethod handle-input :default
+  [session data]
+  (log/warn "Unknown message type received!"))
 
 (defn- web-socket
   [request]
-  (log/debug (with-out-str (pprint (:session request))))
   (httpkit/with-channel request channel
-    (let [username (get-username request)]
-      (swap! open-sockets assoc username channel))
-    (httpkit/on-close channel (fn [status]
-                                (log/info "Channel closed: " status)
-                                (swap! open-sockets dissoc channel)))
-    (httpkit/on-receive channel (fn [data]
-                                  (let [data (json/read-str data)
-                                        username (-> request :session :username)]
-                                    (broadcast (assoc data :username username)))))))
+    (let [session (get-in request [:cookies "ring-session" :value])]
+      (add-channel session channel)
+      (httpkit/on-close channel (fn [status]
+                                  (log/info "Channel closed: " status)
+                                  (swap! open-channels dissoc session)))
+      (httpkit/on-receive channel (fn [data] (handle-input
+                                              (:session request)
+                                              (json/read-str data :key-fn keyword)))))))
 
 (defn- join-chat
   [request]

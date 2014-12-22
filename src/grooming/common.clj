@@ -1,6 +1,7 @@
 (ns grooming.common
   (:require [selmer.parser :as selmer]
             [ring.util.response :refer [response]]
+            [clojure.pprint :refer [pprint]]
             [clojure.data.json :as json]))
 
 (def json-header {"Content-Type" "application/json; charset=utf-8"})
@@ -15,3 +16,9 @@
   [json-data]
   (-> (response (json/write-str json-data))
       (assoc :headers json-header)))
+
+(defn wrap-print-request
+  [handler]
+  (fn [request]
+    (pprint request)
+    (handler request)))

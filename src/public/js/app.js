@@ -12,7 +12,7 @@ angular.module('myModule', ['ui.bootstrap'])
   ws.onmessage = function(event) {
     var data = JSON.parse(event.data);
     var username = data['username'];
-    var message = data['message'];
+    var message = data['contents']['message'];
 
     $scope.$apply(function() {
       $scope.messages.push(username + ": " + message);
@@ -25,7 +25,10 @@ angular.module('myModule', ['ui.bootstrap'])
 
   $scope.sendMessage = function() {
     var message = {
-      message: $scope.enteredMessage,
+      type: "message",
+      contents: {
+        message: $scope.enteredMessage,
+      }
     }
 
     ws.send(JSON.stringify(message));
