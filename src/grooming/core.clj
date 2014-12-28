@@ -1,24 +1,18 @@
 (ns grooming.core
-  #_(:gen-class)
-  (:use [grooming.common]
-        [compojure.core :only [defroutes GET POST]]
-        [clojure.pprint :only [pprint]]
-        [environ.core :only [env]]
-        [selmer.middleware :only [wrap-error-page]])
-  (:require [org.httpkit.server :as httpkit]
-            (ring.middleware [reload :refer [wrap-reload]]
-                             [params :refer [wrap-params]]
-                             [keyword-params :refer [wrap-keyword-params]]
-                             [session :refer [wrap-session]]
-                             [cookies :refer [wrap-cookies]])
+  (:require [clojure.tools.logging :as log]
+            [compojure.core :as compojure :refer [GET defroutes]]
+            [compojure.route :as route]
+            [environ.core :refer [env]]
+            [grooming.chat :as chat]
+            [grooming.common :refer :all]
+            [org.httpkit.server :as httpkit]
+            [ring.middleware.cookies :refer [wrap-cookies]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.reload :refer [wrap-reload]]
+            [ring.middleware.session :refer [wrap-session]]
             [ring.util.response :as response]
-            (compojure [core :as compojure]
-                       [handler :as handler]
-                       [route :as route])
-            [clojure.tools.logging :as log]
-            [clojure.data.json :as json]
-            [selmer.parser :as selmer]
-            [grooming.chat :as chat]))
+            [selmer.parser :as selmer]))
 
 (defn count-page-loads
   [{:keys [session]}]

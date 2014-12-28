@@ -1,12 +1,10 @@
 (ns grooming.chat
-  (:use [grooming.common])
-  (:require [org.httpkit.server :as httpkit]
-            [compojure.core :refer [routes defroutes ANY GET POST]]
-            [ring.util.response :as response]
+  (:require [clojure.data.json :as json]
             [clojure.tools.logging :as log]
-            [clojure.pprint :refer [pprint]]
-            [selmer.parser :as selmer]
-            [clojure.data.json :as json]))
+            [compojure.core :refer [GET POST defroutes]]
+            [grooming.common :refer :all]
+            [org.httpkit.server :as httpkit]
+            [ring.util.response :as response]))
 
 (def chatrooms (atom {}))
 (def open-channels (atom {}))

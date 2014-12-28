@@ -1,8 +1,8 @@
 (ns grooming.common
-  (:require [selmer.parser :as selmer]
-            [ring.util.response :refer [response]]
+  (:require [clojure.data.json :as json]
             [clojure.pprint :refer [pprint]]
-            [clojure.data.json :as json]))
+            [ring.util.response :refer [response]]
+            [selmer.parser :as selmer]))
 
 (def json-header {"Content-Type" "application/json; charset=utf-8"})
 (def text-header {"Content-Type" "text/plain; charset=utf-8"})
