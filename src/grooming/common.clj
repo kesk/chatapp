@@ -22,3 +22,7 @@
   (fn [request]
     (pprint request)
     (handler request)))
+
+(defn- get-username
+  [request]
+    (get-in request [:session :username]))

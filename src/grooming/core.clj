@@ -3,7 +3,7 @@
             [compojure.core :as compojure :refer [GET defroutes]]
             [compojure.route :as route]
             [environ.core :refer [env]]
-            [grooming.chat :as chat]
+            [grooming.chat.chat-page :as chat]
             [grooming.common :refer :all]
             [org.httpkit.server :as httpkit]
             [ring.middleware.cookies :refer [wrap-cookies]]
@@ -13,13 +13,6 @@
             [ring.middleware.session :refer [wrap-session]]
             [ring.util.response :as response]
             [selmer.parser :as selmer]))
-
-(defn count-page-loads
-  [{:keys [session]}]
-  (let [count (:count session 0)
-        session (assoc session :count (inc count))]
-    (-> (response/response (str "You've accessed this page " count " times."))
-        (assoc :session session))))
 
 (defn- require-username
   "Route wrapper that checks for username in the session or in the
@@ -35,7 +28,6 @@
 (defroutes app-routes
   (GET "/" [] (render-template "login.html" {}))
   (compojure/context "/chat" [] (require-username chat/chat-routes))
-  (GET "/count" request (count-page-loads request))
   (route/resources "/static")
   (route/not-found "<p>Page not found.</p>"))
 

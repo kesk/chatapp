@@ -27,6 +27,7 @@ angular.module('myModule', ['ui.bootstrap'])
     var message = {
       type: "message",
       contents: {
+        chat_room: "lobby",
         message: $scope.enteredMessage,
       }
     }
