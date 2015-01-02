@@ -42,6 +42,10 @@
   (let [ids (chatroom/members (keyword chat-room))]
     (send-event ids (assoc data :username u))))
 
+(defmethod handle-event :join-chat
+  [{id :id} {r :room-name}]
+  (chatroom/join id r))
+
 (defmethod handle-event :default
   [session data]
   (log/warn "Unknown message type received!"))
@@ -56,5 +60,5 @@
                                   (log/info "Channel closed: " status)
                                   (swap! open-channels dissoc session-id)))
       (httpkit/on-receive channel (fn [data] (handle-event
-                                              (:session request)
+                                              (assoc (:session request) :id session-id)
                                               (json/read-str data :key-fn json->edn)))))))
