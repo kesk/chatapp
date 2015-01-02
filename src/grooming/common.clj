@@ -1,6 +1,7 @@
 (ns grooming.common
   (:require [clojure.data.json :as json]
             [clojure.pprint :refer [pprint]]
+            [clojure.string :as string]
             [ring.util.response :refer [response]]
             [selmer.parser :as selmer]))
 
@@ -12,9 +13,12 @@
   [tname args]
   (selmer/render-file (str "templates/" tname) args {:tag-open \[, :tag-close \]}))
 
+(def json->edn (fn [s] (-> s (string/replace #"_" "-") keyword)))
+(def edn->json (fn [k] (-> k name (string/replace #"-" "_"))))
+
 (defn json-response
   [json-data]
-  (-> (response (json/write-str json-data))
+  (-> (response (json/write-str json-data :key-fn edn->json))
       (assoc :headers json-header)))
 
 (defn wrap-print-request

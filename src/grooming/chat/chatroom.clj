@@ -31,7 +31,7 @@
 (defn members
   "Give a list of all the members of a chat room."
   [room-name]
-  (get-in [room-name :members] @chatrooms))
+  (get-in @chatrooms [room-name :members]))
 
 (defn member?
   "Checks if id is in the member list of room-name."
