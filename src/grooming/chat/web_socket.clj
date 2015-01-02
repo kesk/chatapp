@@ -26,11 +26,12 @@
     (httpkit/send! channel (json-response data))))
 
 (defn send-event
-  [room-name data]
-  (let [ids (chatroom/members room-name)
-        data (assoc data :chat-room room-name)]
-    (doseq [[id channel] (select-keys @open-channels ids)]
-      (httpkit/send! channel (json-response data)))))
+  [ids data]
+  (let [send-to #(doseq [channel (vals %)]
+                  (httpkit/send! channel (json-response data)))]
+    (case ids
+      :all (send-to @open-channels)
+      (send-to (select-keys @open-channels ids)))))
 
 (defmulti handle-event
   (fn [session data]
@@ -38,7 +39,8 @@
 
 (defmethod handle-event :message
   [{u :username} {:keys [chat-room contents] :as data}]
-    (send-event (keyword chat-room) (assoc data :username u)))
+  (let [ids (chatroom/members (keyword chat-room))]
+    (send-event ids (assoc data :username u))))
 
 (defmethod handle-event :default
   [session data]
