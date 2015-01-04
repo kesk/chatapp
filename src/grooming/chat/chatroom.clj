@@ -9,13 +9,24 @@
          {:members #{id}
           :created-by id}))
 
+(defn list-rooms
+  ([]
+   (keys @chatrooms))
+  ([id]
+   (reduce-kv
+    (fn [coll k v]
+      (if (contains? (:members v) id)
+        (conj coll k)
+        coll))
+    '() @chatrooms)))
+
 (defn join
   "Join a chat room with the name room-name."
   [id room-name]
   (if-let [chatroom (room-name @chatrooms)]
     (let [members (conj (:members chatroom) id)]
       (swap! chatrooms assoc-in [room-name :members] members))
-      (create id room-name)))
+    (create id room-name)))
 
 (defn leave
   "Leave chat room with name room-name. Returns nil if
@@ -28,6 +39,11 @@
         (swap! chatrooms dissoc room-name)
         (swap! chatrooms assoc-in [room-name :members] members)))))
 
+(defn leave-all
+  [id]
+  (doseq [[room _] (list-rooms id)]
+    (leave id room)))
+
 (defn members
   "Give a list of all the members of a chat room."
   [room-name]
@@ -36,5 +52,7 @@
 (defn member?
   "Checks if id is in the member list of room-name."
   [id room-name]
-  (let [members (get-in [room-name :members] @chatrooms)]
-    (contains? members id)))
+  (contains? (members room-name) id))
+
+(defn clear-all []
+  (reset! chatrooms {}))

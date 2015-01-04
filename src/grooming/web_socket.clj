@@ -1,8 +1,7 @@
-(ns grooming.chat.web-socket
+(ns grooming.web-socket
   (:require [clojure.data.json :as json]
             [clojure.tools.logging :as log]
-            [grooming.chat.chatroom :as chatroom]
-            [grooming.common :refer [json-response json->edn]]
+            [grooming.common :refer [json->edn json-response]]
             [org.httpkit.server :as httpkit]))
 
 (def open-channels (atom {}))
@@ -17,7 +16,7 @@
 
 (defn- remove-channel
   [id]
-  (swap! dissoc @open-channels id))
+  (swap! open-channels dissoc id))
 
 (defn broadcast
   "Broadcast a message on all sockets."
@@ -37,28 +36,19 @@
   (fn [session data]
     (keyword (:type data))))
 
-(defmethod handle-event :message
-  [{u :username} {:keys [chat-room contents] :as data}]
-  (let [ids (chatroom/members (keyword chat-room))]
-    (send-event ids (assoc data :username u))))
-
-(defmethod handle-event :join-chat
-  [{id :id} {r :room-name}]
-  (chatroom/join id r))
-
 (defmethod handle-event :default
   [session data]
   (log/warn "Unknown message type received!"))
 
 (defn web-socket
-  [request]
+  [request & {:keys [on-close]}]
   (httpkit/with-channel request channel
     (let [session-id (get-in request [:cookies "ring-session" :value])]
       (add-channel session-id channel)
-      (chatroom/join session-id :lobby)
       (httpkit/on-close channel (fn [status]
                                   (log/info "Channel closed: " status)
-                                  (swap! open-channels dissoc session-id)))
+                                  (remove-channel session-id)
+                                  (if on-close (on-close))))
       (httpkit/on-receive channel (fn [data] (handle-event
                                               (assoc (:session request) :id session-id)
                                               (json/read-str data :key-fn json->edn)))))))

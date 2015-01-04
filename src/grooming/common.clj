@@ -30,3 +30,7 @@
 (defn- get-username
   [request]
     (get-in request [:session :username]))
+
+(defn get-session-id
+  [req]
+  (get-in req [:cookies "ring-session" :value]))
