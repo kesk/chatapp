@@ -2,12 +2,18 @@
 
 (def ^{:private true} chatrooms (atom {}))
 
+(defn- new-room
+  [id]
+  {:members #{id}
+   :created-by id})
+
 (defn- create
   "Create a chat room with only the user that crated it."
   [id room-name]
-  (swap! chatrooms assoc room-name
-         {:members #{id}
-          :created-by id}))
+  (let [new-room {:members #{id}
+                  :created-by id}]
+    (swap! chatrooms assoc room-name new-room)
+    new-room))
 
 (defn list-rooms
   ([]
@@ -20,13 +26,17 @@
         coll))
     '() @chatrooms)))
 
+(defn- join-or-create
+  [id]
+  (fn [rooms room-name]
+    (if (room-name rooms)
+      (update-in rooms [room-name :members] conj id)
+      (assoc rooms room-name (new-room id)))))
+
 (defn join
   "Join a chat room with the name room-name."
-  [id room-name]
-  (if-let [chatroom (room-name @chatrooms)]
-    (let [members (conj (:members chatroom) id)]
-      (swap! chatrooms assoc-in [room-name :members] members))
-    (create id room-name)))
+  [id & room-names]
+  (swap! chatrooms #(reduce (join-or-create id) % room-names)))
 
 (defn leave
   "Leave chat room with name room-name. Returns nil if
