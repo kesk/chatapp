@@ -27,8 +27,7 @@
   [req]
   (let [session-id (get-session-id req)]
     (chatroom/join session-id :lobby)
-    (socket/web-socket req
-                       :on-close #(chatroom/leave-all session-id))))
+    (socket/web-socket req)))
 
 (defroutes chat-routes
   (POST "/" [] render-chat)

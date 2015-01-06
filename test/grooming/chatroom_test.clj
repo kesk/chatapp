@@ -2,24 +2,24 @@
   (:require [clojure.test :refer :all]
             [grooming.chat.chatroom :refer :all]))
 
-(defn clear-all-chat-rooms [f]
-  (f)
-  (clear-all))
-
-(use-fixtures :each clear-all-chat-rooms)
-
 (deftest join-chat-single-user
-  (join "id" :foo-chat)
-  (is (member? "id" :foo-chat)
-      "'id' should be member of :foo-chat")
-  (is (= #{"id"}
-         (members :foo-chat))
-      "Member list should contain 'id'"))
+  (let [store (join empty-store "id" :foo-chat)]
+    (is (member? store "id" :foo-chat)
+        "'id' should be member of :foo-chat")
+    (is (= #{"id"}
+           (members store :foo-chat))
+        "Member list should contain 'id'")))
 
 (deftest join-chat-multiple-users
-  (let [ids '("foo" "bar" "baz")]
+  (let [ids '("foo" "bar" "baz")
+        store (reduce #(join %1 %2 :foo-chat) empty-store ids)]
     (doseq [id ids]
-      (join id :foo-chat)
-      (is (member? id :foo-chat)))
+      (is (member? store id :foo-chat)))
     (is (= (set ids)
-           (members :foo-chat)))))
+           (members store :foo-chat)))))
+
+(deftest leave-chat
+  (let [store (-> empty-store
+                  (join "user" :chat)
+                  (leave "user" :chat))]
+    (is (not (member? store "user" :chat)))))
