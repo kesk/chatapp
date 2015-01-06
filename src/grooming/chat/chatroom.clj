@@ -6,7 +6,7 @@
 (defn- new-room
   [store id room-name]
   (assoc-in store [:chats room-name] {:members #{}
-                                          :created-by id}))
+                                      :created-by id}))
 
 (defn- new-user
   [store id]
@@ -62,3 +62,8 @@
   (-> store
       (update-chat room-name update-in [:members] disj id)
       (update-user id disj room-name)))
+
+(defn leave-all
+  [store id]
+  (let [chats (get-in store [:users id])]
+    (reduce #(leave %1 id %2) store chats)))
