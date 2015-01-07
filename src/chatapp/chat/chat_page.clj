@@ -1,9 +1,9 @@
-(ns grooming.chat.chat-page
-  (:require [clojure.tools.logging :as log]
+(ns chatapp.chat.chat-page
+  (:require [chatapp.chat.chatroom :as chatroom]
+            [chatapp.common :refer [get-session-id render-template]]
+            [chatapp.web-socket :as socket]
+            [clojure.tools.logging :as log]
             [compojure.core :refer [GET POST defroutes]]
-            [grooming.chat.chatroom :as chatroom]
-            [grooming.common :refer :all]
-            [grooming.web-socket :as socket]
             [ring.util.response :as response]))
 
 (def chats (atom chatroom/empty-store))

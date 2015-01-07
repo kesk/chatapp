@@ -1,4 +1,4 @@
-(ns grooming.chat.chatroom)
+(ns chatapp.chat.chatroom)
 
 (def empty-store {:chats {}
                   :users {}})

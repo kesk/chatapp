@@ -1,0 +1,1 @@
+(ns chatapp.core-test)

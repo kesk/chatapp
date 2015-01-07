@@ -1,4 +1,4 @@
-(defproject grooming "0.1.0-SNAPSHOT"
+(defproject chatapp "0.1.0-SNAPSHOT"
   :description "Tool for estimating user story points."
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -14,6 +14,6 @@
                  [org.clojure/data.json "0.2.5"]
                  [selmer "0.6.9"]
                  [environ "1.0.0"]]
-  :main grooming.core
+  :main chatapp.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

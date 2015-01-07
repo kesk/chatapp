@@ -1,7 +1,7 @@
-(ns grooming.chat-page-test
-  (:require [clojure.test :refer :all]
-            [grooming.chat.chat-page :refer :all]
-            [grooming.chat.chatroom :as chatroom]))
+(ns chatapp.chat-page-test
+  (:require [chatapp.chat.chat-page :refer :all]
+            [chatapp.chat.chatroom :as chatroom]
+            [clojure.test :refer :all]))
 
 (defn mock-fn
   "Returns list of arguments given to it"

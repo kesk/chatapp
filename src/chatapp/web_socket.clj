@@ -1,7 +1,7 @@
-(ns grooming.web-socket
-  (:require [clojure.data.json :as json]
+(ns chatapp.web-socket
+  (:require [chatapp.common :refer [json->edn json-response]]
+            [clojure.data.json :as json]
             [clojure.tools.logging :as log]
-            [grooming.common :refer [json->edn json-response]]
             [org.httpkit.server :as httpkit]))
 
 (def open-channels (atom {}))

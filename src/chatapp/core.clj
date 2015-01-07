@@ -1,10 +1,10 @@
-(ns grooming.core
-  (:require [clojure.tools.logging :as log]
+(ns chatapp.core
+  (:require [chatapp.chat.chat-page :as chat]
+            [chatapp.common :refer [render-template]]
+            [clojure.tools.logging :as log]
             [compojure.core :as compojure :refer [GET defroutes]]
             [compojure.route :as route]
             [environ.core :refer [env]]
-            [grooming.chat.chat-page :as chat]
-            [grooming.common :refer :all]
             [org.httpkit.server :as httpkit]
             [ring.middleware.cookies :refer [wrap-cookies]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]

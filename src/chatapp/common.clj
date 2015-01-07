@@ -1,4 +1,4 @@
-(ns grooming.common
+(ns chatapp.common
   (:require [clojure.data.json :as json]
             [clojure.pprint :refer [pprint]]
             [clojure.string :as string]
