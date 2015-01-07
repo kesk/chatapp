@@ -35,9 +35,11 @@
   [handler]
   (fn [{:keys [request-method uri] :as req}]
     (let [resp (handler req)]
-      (log/info (name request-method) (:status resp)
-            (if-let [qs (:query-string req)]
-              (str uri "?" qs) uri))
+      (log/info
+       (name request-method)
+       (:status resp)
+       (if-let [qs (:query-string req)]
+         (str uri "?" qs) uri))
       resp)))
 
 (def app (-> app-routes

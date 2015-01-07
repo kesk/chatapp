@@ -3,19 +3,35 @@
             [compojure.core :refer [GET POST defroutes]]
             [grooming.chat.chatroom :as chatroom]
             [grooming.common :refer :all]
-            [grooming.web-socket :as socket :refer [handle-event]]
+            [grooming.web-socket :as socket]
             [ring.util.response :as response]))
 
 (def chats (atom chatroom/empty-store))
 
+(defmulti handle-event
+  (fn [id session data]
+    (keyword (:type data))))
+
 (defmethod handle-event :message
-  [{u :username} {:keys [chat-room contents] :as data}]
+  [_ {u :username} {:keys [chat-room] :as data}]
   (let [ids (chatroom/members @chats (keyword chat-room))]
-    (socket/send-event ids (assoc data :username u))))
+    (list ids (assoc data :username u))))
 
 (defmethod handle-event :join-chat
-  [{id :id} {r :room-name}]
+  [id _ {r :room-name}]
   (swap! chats chatroom/join id r))
+
+(defmethod handle-event :default
+  [_ _ _]
+  (log/warn "Unknown message type received!"))
+
+(defn open-socket
+  [socket-fn]
+  (fn [req]
+    (let [session-id (get-session-id req)
+          on-close #(swap! chats chatroom/leave-all session-id)]
+      (swap! chats chatroom/join session-id :lobby)
+      (socket-fn handle-event req :on-close on-close))))
 
 (defn- render-chat
   [request]
@@ -25,14 +41,7 @@
         (response/content-type "text/html; charset=utf-8")
         (assoc :session session))))
 
-(defn open-socket
-  [req]
-  (let [session-id (get-session-id req)
-        on-close #(swap! chats chatroom/leave-all session-id)]
-    (swap! chats chatroom/join session-id :lobby)
-    (socket/web-socket req :on-close on-close)))
-
 (defroutes chat-routes
   (POST "/" [] render-chat)
   (GET "/" [] render-chat)
-  (GET "/socket" [] open-socket))
+  (GET "/socket" [] (open-socket socket/web-socket)))

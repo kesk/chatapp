@@ -32,16 +32,8 @@
       :all (send-to @open-channels)
       (send-to (select-keys @open-channels ids)))))
 
-(defmulti handle-event
-  (fn [session data]
-    (keyword (:type data))))
-
-(defmethod handle-event :default
-  [session data]
-  (log/warn "Unknown message type received!"))
-
 (defn web-socket
-  [request & {:keys [on-close]}]
+  [on-event request & {:keys [on-close]}]
   (httpkit/with-channel request channel
     (let [session-id (get-in request [:cookies "ring-session" :value])]
       (add-channel session-id channel)
@@ -49,6 +41,9 @@
                                   (log/info "Channel closed: " status)
                                   (remove-channel session-id)
                                   (if on-close (on-close))))
-      (httpkit/on-receive channel (fn [data] (handle-event
-                                              (assoc (:session request) :id session-id)
-                                              (json/read-str data :key-fn json->edn)))))))
+      (httpkit/on-receive channel
+                          (fn [data]
+                            (let [session (:session request)
+                                  data (json/read-str data :key-fn json->edn)
+                                  [ids response] (on-event session-id session data)]
+                                (if (not (nil? response)) (send-event ids response))))))))

@@ -20,11 +20,11 @@
   [store id room-name]
   (not (nil? (get (members store room-name) id))))
 
-(defn- chat-exists?
+(defn chat-exists?
   [store room-name]
   (not (nil? (get-in store [:chats room-name]))))
 
-(defn- user-exists?
+(defn user-exists?
   [store id]
   (not (nil? (get-in store [:users id]))))
 
@@ -56,14 +56,14 @@
       (update-user id conj room-name)))
 
 (defn leave
-  "Leave chat room with name room-name. Returns nil if
-  the chat room does not exist."
+  "Leave chat room with name room-name."
   [store id room-name]
   (-> store
       (update-chat room-name update-in [:members] disj id)
       (update-user id disj room-name)))
 
 (defn leave-all
+  "Leave all chat rooms that id is in"
   [store id]
   (let [chats (get-in store [:users id])]
     (reduce #(leave %1 id %2) store chats)))
