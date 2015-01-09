@@ -1,4 +1,4 @@
-(ns chatapp.chatroom-test
+(ns chatapp.chat.chatroom-test
   (:require [chatapp.chat.chatroom :refer :all]
             [clojure.test :refer :all]))
 

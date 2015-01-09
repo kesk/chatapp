@@ -14,8 +14,9 @@
 
 (defmethod handle-event :message
   [_ {u :username} {:keys [chat-room] :as data}]
-  (let [ids (chatroom/members @chats (keyword chat-room))]
-    (list ids (assoc data :username u))))
+  (let [ids (chatroom/members @chats (keyword chat-room))
+        out-data (select-keys data [:type :chat-room :contents])]
+    (list ids (assoc out-data :username u))))
 
 (defmethod handle-event :join-chat
   [id _ {r :room-name}]
