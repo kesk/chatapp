@@ -26,14 +26,17 @@
 
 (defn send-event
   [ids data]
-  (let [send-to #(doseq [channel (vals %)]
-                  (httpkit/send! channel (json-response data)))]
-    (case ids
-      :all (send-to @open-channels)
-      (send-to (select-keys @open-channels ids)))))
+  (let [channels (select-keys @open-channels ids)]
+    (doseq [[_ ch] channels]
+      (httpkit/send! ch (json-response data)))))
+
+(defn send-events
+  [& events]
+  (doseq [[ids data] events]
+    (send-event ids data)))
 
 (defn web-socket
-  [on-event request & {:keys [on-close]}]
+  [handler request & {:keys [on-close]}]
   (httpkit/with-channel request channel
     (let [session-id (get-in request [:cookies "ring-session" :value])]
       (add-channel session-id channel)
@@ -45,5 +48,5 @@
                           (fn [data]
                             (let [session (:session request)
                                   data (json/read-str data :key-fn json->edn)
-                                  [ids response] (on-event session-id session data)]
-                                (if (not (nil? response)) (send-event ids response))))))))
+                                  events (handler session-id session data)]
+                              (if events (apply send-events events))))))))

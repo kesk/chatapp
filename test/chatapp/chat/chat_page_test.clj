@@ -30,18 +30,21 @@
           (is (not (chatroom/user-exists? @chats "id"))
               "The user should not exist after closing socket"))))))
 
-(deftest handle-event-test
+(deftest handle-event-message
   (chatroom/join @chats "id" :foochat)
-  (testing "Chat message"
-    (let [session {:username "username"}
-          data {:type :message
-                :chat-room "foochat"
-                :contents "Hello, World!"
-                :foo "Mallicious"}
-          expected (-> data
-                    (dissoc :foo)
-                    (assoc :username "username"))
-          [id d] (handle-event "id" session data)]
-      (is (= expected d))
-      (is (= (-> d keys set) #{:type :username :chat-room :contents}))
-      (is (= (:username d) "username")))))
+  (chatroom/join @chats "other-user-1" :foochat)
+  (chatroom/join @chats "other-user-2" :foochat)
+  (let [session {:username "username"}
+        data {:type :message
+              :chat-room "foochat"
+              :contents "Hello, World!"
+              :foo "Mallicious"}
+        expected (-> data
+                     (dissoc :foo)
+                     (assoc :username "username"))
+        [[ids d] :as e] (handle-event "id" session data)]
+    (is (= 1 (count e)))
+    (is (= #{"id" "other-user-1" "other-user-2"} ids))
+    (is (= expected d))
+    (is (= #{:type :username :chat-room :contents} (-> d keys set)))
+    (is (= "username" (:username d)))))
