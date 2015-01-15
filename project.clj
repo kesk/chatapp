@@ -13,7 +13,8 @@
                  [ch.qos.logback/logback-classic "1.1.1"]
                  [org.clojure/data.json "0.2.5"]
                  [selmer "0.6.9"]
-                 [environ "1.0.0"]]
+                 [environ "1.0.0"]
+                 [org.clojure/test.check "0.6.2"]]
   :main chatapp.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

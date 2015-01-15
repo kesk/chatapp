@@ -4,8 +4,8 @@
             [clojure.test :refer :all]))
 
 (defn clear-chatrooms [f]
-  (f)
-  (reset! chats chatroom/empty-store))
+  (reset! chats chatroom/empty-store)
+  (f))
 
 (use-fixtures :each clear-chatrooms)
 
@@ -31,20 +31,15 @@
               "The user should not exist after closing socket"))))))
 
 (deftest handle-event-message
-  (chatroom/join @chats "id" :foochat)
-  (chatroom/join @chats "other-user-1" :foochat)
-  (chatroom/join @chats "other-user-2" :foochat)
-  (let [session {:username "username"}
-        data {:type :message
-              :chat-room "foochat"
-              :contents "Hello, World!"
-              :foo "Mallicious"}
-        expected (-> data
-                     (dissoc :foo)
-                     (assoc :username "username"))
-        [[ids d] :as e] (handle-event "id" session data)]
-    (is (= 1 (count e)))
-    (is (= #{"id" "other-user-1" "other-user-2"} ids))
-    (is (= expected d))
-    (is (= #{:type :username :chat-room :contents} (-> d keys set)))
-    (is (= "username" (:username d)))))
+  (swap! chats chatroom/join "id" :foochat)
+  (swap! chats chatroom/join "other-user-1" :foochat)
+  (let [user ["id" "name"]
+        event {:type "message"
+               :chat-room "foochat"
+               :contents "Hello friends!"
+               :foo "bar"}
+        [[ids ret-event]] (handle-event @chats user event)]
+    (is (= #{"id" "other-user-1"} ids))
+    (is (= (-> event
+               (dissoc :foo)
+               (assoc :username (second user)))) ret-event)))

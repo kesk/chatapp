@@ -46,7 +46,7 @@
                                   (if on-close (on-close))))
       (httpkit/on-receive channel
                           (fn [data]
-                            (let [session (:session request)
+                            (let [username (get-in request [:session :username])
                                   data (json/read-str data :key-fn json->edn)
-                                  events (handler session-id session data)]
+                                  events (handler [session-id username] data)]
                               (if events (apply send-events events))))))))

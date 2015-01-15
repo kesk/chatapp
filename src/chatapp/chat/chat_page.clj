@@ -8,19 +8,21 @@
 
 (def chats (atom chatroom/empty-store))
 
+;user [id username]
+;[store user event]
 (defmulti handle-event
-  (fn [id session data]
-    (keyword (:type data))))
+  (fn [store user event]
+    (keyword (:type event))))
 
 (defmethod handle-event :message
-  [_ {u :username} {:keys [chat-room] :as data}]
-  (let [ids (chatroom/members @chats (keyword chat-room))
-        out-data (select-keys data [:type :chat-room :contents])]
-    [[ids (assoc out-data :username u)]]))
+  [store [_ username] {:keys [chat-room] :as event}]
+  (let [ids (chatroom/members store (keyword chat-room))
+        out-data (select-keys event [:type :chat-room :contents])]
+    [[ids (assoc out-data :username username)]]))
 
 (defmethod handle-event :join-chat
-  [id _ {r :room-name}]
-  (swap! chats chatroom/join id r))
+  [store [id _] {r :room-name}]
+  (swap! store chatroom/join id r))
 
 (defmethod handle-event :default
   [_ _ _]
@@ -32,7 +34,8 @@
     (let [session-id (get-session-id req)
           on-close #(swap! chats chatroom/leave-all session-id)]
       (swap! chats chatroom/join session-id :lobby)
-      (socket-fn handle-event req :on-close on-close))))
+      (socket-fn (partial handle-event @chats) req
+                 :on-close on-close))))
 
 (defn- render-chat
   [request]
