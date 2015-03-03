@@ -19,7 +19,18 @@
            (members store :foo-chat)))))
 
 (deftest leave-chat
-  (let [store (-> empty-store
-                  (join "user" :chat)
-                  (leave "user" :chat))]
-    (is (not (member? store "user" :chat)))))
+  (testing "One user"
+    (let [store (-> empty-store
+                    (join "user" :chat)
+                    (leave "user" :chat))]
+      (is (not (member? store "user" :chat)))
+      (is (not (chat-exists? store :chat)))))
+  (testing "Multiple users"
+    (let [store (-> empty-store
+                    (join "user1" :chat)
+                    (join "user2" :chat)
+                    (leave "user1" :chat))]
+      (is (not (member? store "user1" :chat)))
+      (is (member? store "user2" :chat))
+      (is (chat-exists? store :chat)
+          "Chat room still exists."))))

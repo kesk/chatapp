@@ -1,4 +1,11 @@
-(ns chatapp.chat.chatroom)
+(ns chatapp.chat.chatroom
+  "Handles the storing of chatroom information.
+
+  Format of the store:
+  {:chats {:foochat {:members #{:user1-id :user2-id}
+                     :created-by :user1-id}}
+   :users {:user1-id #{:foochat}
+           :user2-id #{:foochat}}}")
 
 (def empty-store {:chats {}
                   :users {}})

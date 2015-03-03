@@ -14,7 +14,8 @@
                  [org.clojure/data.json "0.2.5"]
                  [selmer "0.6.9"]
                  [environ "1.0.0"]
-                 [org.clojure/test.check "0.6.2"]]
+                 [org.clojure/test.check "0.6.2"]
+                 [digest "1.4.4"]]
   :main chatapp.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

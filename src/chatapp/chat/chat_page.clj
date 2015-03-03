@@ -8,7 +8,7 @@
 
 (def chats (atom chatroom/empty-store))
 
-;user [id username]
+;user [id username] 
 ;[store user event]
 (defmulti handle-event
   (fn [store user event]
@@ -22,7 +22,7 @@
 
 (defmethod handle-event :join-chat
   [store [id _] {r :room-name}]
-  (swap! store chatroom/join id r))
+  (let [id "seb"] (swap! store chatroom/join id r)))
 
 (defmethod handle-event :default
   [_ _ _]
