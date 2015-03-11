@@ -1,7 +1,9 @@
 (ns chatapp.web-socket
   (:require [chatapp.common :refer [json->edn json-response]]
             [clojure.data.json :as json]
+            [clojure.pprint :refer [pprint]]
             [clojure.tools.logging :as log]
+            [org.httpkit.client :refer [request]]
             [org.httpkit.server :as httpkit]))
 
 (def open-channels (atom {}))
@@ -35,19 +37,25 @@
   (doseq [[ids data] events]
     (send-event ids data)))
 
+(defn hashmap-to-string [m]
+  (with-out-str (pprint m)))
+
 (defn web-socket
-  [handler request & {:keys [on-close]}]
+  [handler reques-t & {:keys [on-close]}]
   (httpkit/with-channel request channel
-    (let [session-id (get-in request [:cookies "ring-session" :value])]
-      (add-channel session-id channel)
+    (let [id (-> request
+                 hashmap-to-string
+                 digest/md5)]
+      (add-channel id channel)
       (httpkit/on-close channel (fn [status]
                                   (log/info "Channel closed: " status)
-                                  (remove-channel session-id)
+                                  (remove-channel id)
                                   (if on-close (on-close))))
       (httpkit/on-receive channel
                           (fn [data]
                             (log/debug (str "Received: " data))
                             (let [username (get-in request [:session :username])
                                   data (json/read-str data :key-fn json->edn)
-                                  events (handler [session-id username] data)]
+                                  events (handler [id username] data)]
                               (if events (apply send-events events))))))))
+

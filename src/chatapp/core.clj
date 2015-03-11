@@ -27,7 +27,7 @@
 
 (defroutes app-routes
   (GET "/" [] (render-template "login.html" {}))
-  (compojure/context "/chat" [] (require-username chat/chat-routes))
+  (compojure/context "/chat" [] chat/chat-routes)
   (route/resources "/static")
   (route/not-found "<p>Page not found.</p>"))
 
