@@ -1,12 +1,9 @@
-(ns chatapp.chat.chat-page
+(ns chatapp.chat.server
   (:require [chatapp.chat.chatroom :as chatroom]
-            [chatapp.common :refer [json->edn json-response render-template]]
+            [chatapp.common :refer [json->edn json-response]]
             [clojure.data.json :as json]
-            [clojure.pprint :refer [pprint]]
             [clojure.tools.logging :as log]
-            [compojure.core :refer [GET POST defroutes]]
-            [org.httpkit.server :as httpkit]
-            [ring.util.response :as response]))
+            [org.httpkit.server :as httpkit]))
 
 (def user-db (ref {}))
 (def chat-db (atom chatroom/empty-store))
@@ -25,11 +22,6 @@
 (defmethod handle-event :default
   [_ _]
   (log/warn "Unknown message type received!"))
-
-(defn- render-chat
-  [request]
-  (-> (response/response (render-template "chat.html"))
-      (response/content-type "text/html; charset=utf-8")))
 
 (defn random-str [length]
   (let [valid-chars (map char
@@ -78,13 +70,3 @@
                                   event (handle-event id data)]
                               (apply send-event event)))))))
 
-(defn chatroom-handler
-  [request]
-  (if-not (:with-websocket? request)
-    (render-chat)
-    (web-socket request)))
-
-(defroutes chat-routes
-  (POST "/" req (render-chat req))
-  (GET "/" req (render-chat req))
-  (GET "/socket" req (web-socket req)))

@@ -1,5 +1,5 @@
 (ns chatapp.core
-  (:require [chatapp.chat.chat-page :as chat]
+  (:require [chatapp.chat :as chat]
             [chatapp.common :refer [render-template]]
             [clojure.tools.logging :as log]
             [compojure.core :as compojure :refer [GET defroutes]]
