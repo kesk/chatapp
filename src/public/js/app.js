@@ -3,7 +3,16 @@ angular.module('myModule', ['ui.bootstrap'])
 .controller('MyCtrl', function($scope) {
   $scope.messages = [];
 
-  var ws = new WebSocket("ws://127.0.0.1:8080/chat/socket");
+  var loc = window.location, websocket_uri;
+  if (loc.protocol === "https:") {
+    websocket_uri = "wss:";
+  }
+  else {
+    websocket_uri = "ws:";
+  }
+  websocket_uri += "//" + loc.host + loc.pathname;
+
+  var ws = new WebSocket(websocket_uri);
 
   ws.onopen = function() {
     console.log("connection established ...");
