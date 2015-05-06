@@ -18,4 +18,6 @@
                  [digest "1.4.4"]]
   :main chatapp.core
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:aot :all}
+             :dev {:source-paths ["dev"]
+                   :dependencies [[org.clojure/tools.namespace "0.2.10"]]}})

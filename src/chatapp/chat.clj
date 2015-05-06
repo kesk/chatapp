@@ -10,6 +10,7 @@
       (response/content-type "text/html; charset=utf-8")))
 
 (defn chatroom-handler
+  "Shows either the chat page or starts a websocket depending on the request made."
   [request]
   (if-not (:websocket? request)
     (render-chat request)

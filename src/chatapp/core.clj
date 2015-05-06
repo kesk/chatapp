@@ -14,17 +14,6 @@
             [ring.util.response :as response]
             [selmer.parser :as selmer]))
 
-(defn- require-username
-  "Route wrapper that checks for username in the session or in the
-  request params. If a username is not present redirects to '/'."
-  [handler]
-  (fn [{:keys [session params] :as request}]
-    (let [set-username #(assoc-in request [:session :username] %)]
-      (cond
-       (:username params)  (handler (set-username (:username params)))
-       (:username session) (handler request)
-       :else               (response/redirect "/")))))
-
 (defroutes app-routes
   (GET "/" [] (render-template "login.html" {}))
   (compojure/context "/chat" [] chat/chat-routes)
