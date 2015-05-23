@@ -15,7 +15,7 @@
     (if-let [client (get @client-db id)]
       (do
         (doseq [room-name (keys (:chatrooms client))]
-          (alter chatroom-db update-in [room-name :members] dissoc id))
+          (alter chatroom-db update-in [room-name :members] disj id))
         (alter client-db dissoc id))
       nil)))
 
@@ -28,7 +28,7 @@
   [id room-name]
   (dosync
     (let [channel (get-in @client-db [id :channel])
-          chatroom (if-let [existing-chat (get room-name @chatroom-db)]
+          chatroom (if-let [existing-chat (get @chatroom-db room-name)]
                      (update-in existing-chat [:members] conj id)
                      (mk-chatroom room-name id channel))]
       (alter chatroom-db assoc room-name chatroom)

@@ -12,7 +12,8 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.session :refer [wrap-session]]
             [ring.util.response :as response]
-            [selmer.parser :as selmer]))
+            [selmer.parser :as selmer])
+  (:gen-class))
 
 (defroutes app-routes
   (GET "/" [] (render-template "login.html" {}))

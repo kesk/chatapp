@@ -3,6 +3,7 @@
                                         members remove-client]]
             [chatapp.common :refer [json->edn json-response]]
             [clojure.data.json :as json]
+            [clojure.set :refer [difference]]
             [clojure.tools.logging :as log]
             [org.httpkit.server :as httpkit]))
 
@@ -16,6 +17,15 @@
   (let [ids (members (keyword chat-room))
         out-data (select-keys event [:type :chat-room :contents])]
     [ids (assoc out-data :username user-id)]))
+
+(defmethod handle-event :join-chat
+  [user-id {:keys [chatroom] :as event}]
+  (join-chatroom user-id (keyword chatroom))
+  (let [get-other-users (comp #(difference % #{user-id}) members)
+        ids (get-other-users (keyword chatroom))]
+    [ids {:type :user-joined
+          :chat-room chatroom
+          :user-id user-id}]))
 
 (defmethod handle-event :default
   [_ _]
@@ -44,6 +54,7 @@
 (defn web-socket
   [request]
   (httpkit/with-channel request channel
+    (log/debug "Client connected to chat server")
     (let [id (new-random-username)]
       (add-client id channel)
       (join-chatroom id :lobby)
