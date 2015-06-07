@@ -11,7 +11,6 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.session :refer [wrap-session]]
-            [ring.util.response :as response]
             [selmer.parser :as selmer])
   (:gen-class))
 

@@ -2,12 +2,14 @@
 
 (def client-db (ref {}))
 (def chatroom-db (ref {}))
+(def nick-db (ref {}))
 
 (defn add-client
-  [id channel & attrs]
-  (let [client {:channel channel}]
+  [id nick & attrs]
+  (let [client {:nick nick}]
     (dosync
-      (alter client-db assoc id (merge attrs client)))))
+      (alter client-db assoc id (merge attrs client))
+      (alter nick-db assoc nick id))))
 
 (defn remove-client
   [id]
@@ -49,3 +51,7 @@
 (defn members
   [room-name]
   (get-in @chatroom-db [room-name :members]))
+
+(defn get-nick
+  [id]
+  (get-in @client-db [id :nick]))
