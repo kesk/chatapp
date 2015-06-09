@@ -1,5 +1,5 @@
 (ns chatapp.chat.server
-  (:require [chatapp.chat.state :refer [add-client client-db get-nick
+  (:require [chatapp.chat.state :refer [add-client find-nick get-client-attr
                                         join-chatroom members remove-client]]
             [chatapp.common :refer [json->edn json-response]]
             [clojure.data.json :as json]
@@ -16,7 +16,7 @@
   [user-id {:keys [chat-room] :as event}]
   (let [ids (members (keyword chat-room))
         out-data (select-keys event [:type :chat-room :contents])]
-    [ids (assoc out-data :username (get-nick user-id))]))
+    [ids (assoc out-data :username (get-client-attr user-id :nick))]))
 
 (defmethod handle-event :join-chat
   [user-id {:keys [chatroom] :as event}]
@@ -42,30 +42,33 @@
 (defn new-random-username
   []
   (let [rnd-name (str "usr-" (random-str 10))]
-    (if (get-nick rnd-name)
+    (if (find-nick rnd-name)
       (recur)
       rnd-name)))
 
 (defn send-event
   [ids data]
-  (doseq [channel ids]
-    (httpkit/send! channel (json-response data))))
+  (doseq [id ids]
+    (httpkit/send! (get-client-attr id :channel) (json-response data))))
+
+(defn uuid [] (str (java.util.UUID/randomUUID)))
 
 (defn web-socket
   [request]
   (httpkit/with-channel request channel
-    (log/debug "Client connected to chat server")
-    (add-client channel (new-random-username))
-    (join-chatroom channel :lobby)
-    (httpkit/on-close channel
-                      (fn [status]
-                        (log/info "Channel closed: " status)
-                        (remove-client channel)))
-    (httpkit/on-receive channel
-                        (fn [data]
-                          (log/info "Received: " data)
-                          (let [data (json/read-str data :key-fn json->edn)
-                                event (handle-event channel data)]
-                            (log/debug event)
-                            (apply send-event event))))))
+    (let [user-id (uuid)]
+      (log/debug "Client connected to chat server")
+      (add-client user-id (new-random-username) :channel channel)
+      (join-chatroom user-id :lobby)
+      (httpkit/on-close channel
+                        (fn [status]
+                          (log/info "Channel closed: " status)
+                          (remove-client user-id)))
+      (httpkit/on-receive channel
+                          (fn [data]
+                            (log/info "Received: " data)
+                            (let [data (json/read-str data :key-fn json->edn)
+                                  event (handle-event user-id data)]
+                              (log/debug event)
+                              (apply send-event event)))))))
 

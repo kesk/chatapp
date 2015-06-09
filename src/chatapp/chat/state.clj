@@ -4,19 +4,38 @@
 (def chatroom-db (ref {}))
 (def nick-db (ref {}))
 
+(defn uuid []
+  (let [new-uuid (str (java.util.UUID/randomUUID))]
+    (if (get @client-db new-uuid)
+      (recur)
+      new-uuid)))
+
 (defn add-client
   [id nick & attrs]
-  (let [client {:nick nick}]
-    (dosync
-      (alter client-db assoc id (merge attrs client))
-      (alter nick-db assoc nick id))))
+  (dosync
+    (if (get-client id)
+      nil ; Client already exists
+      (let [client (merge (apply hash-map attrs)
+                          {:nick nick
+                           :chatrooms #{}})]
+        (alter nick-db assoc nick id)
+        (alter client-db assoc id client)
+        client))))
+
+(defn get-client
+  [id]
+  (get @client-db id))
+
+(defn get-client-attr
+  [id attr]
+  (get-in @client-db [id attr]))
 
 (defn remove-client
   [id]
   (dosync
     (if-let [client (get @client-db id)]
       (do
-        (doseq [room-name (keys (:chatrooms client))]
+        (doseq [room-name (:chatrooms client)]
           (alter chatroom-db update-in [room-name :members] disj id))
         (alter client-db dissoc id))
       nil)))
@@ -34,7 +53,7 @@
                      (update-in existing-chat [:members] conj id)
                      (mk-chatroom room-name id channel))]
       (alter chatroom-db assoc room-name chatroom)
-      (alter client-db update-in [id :chatrooms] assoc room-name chatroom))))
+      (alter client-db update-in [id :chatrooms] conj room-name))))
 
 (defn member?
   [id room-name]
@@ -52,6 +71,6 @@
   [room-name]
   (get-in @chatroom-db [room-name :members]))
 
-(defn get-nick
-  [id]
-  (get-in @client-db [id :nick]))
+(defn find-nick
+  [nick]
+  (get @nick-db nick))
