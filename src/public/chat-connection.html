@@ -1,0 +1,76 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<dom-module id="chat-connection">
+  <style>
+    :host {
+      display: none;
+    }
+  </style>
+
+  <script>
+  Polymer({
+    is: "chat-connection",
+
+    ready: function() {
+      this._connect("ws://127.0.0.1:8080/chat");
+    },
+
+    properties: {
+      chatlog: {
+        type: Array,
+        value: function() { return []; },
+        notify: true,
+        readOnly: true,
+      }
+    },
+
+    sendMessage: function(message) {
+      var data = {
+        type: "message",
+        chat_room: "lobby",
+        contents: message,
+      }
+
+      this._ws.send(JSON.stringify(data));
+    },
+
+    _connect: function(url) {
+      this._ws = new WebSocket(url);
+      this._ws.onopen = this._onConnection.bind(this);
+      this._ws.onmessage = this._onMessage.bind(this);
+      this._ws.onclose = this._onClose.bind(this);
+      this._ws.onerror = this._onError.bind(this);
+    },
+
+    _ws: null,
+
+    _onConnection: function() {
+      console.log("Connection established");
+    },
+
+    _onMessage: function(event) {
+      var data = JSON.parse(event.data);
+
+      switch (data.type) {
+        case 'message':
+          this._handleChatMessage(data);
+          break;
+        default:
+          console.log("Unknown message type received: " + data.type);
+      }
+    },
+
+    _onClose: function(event) {
+      console.log("Connection closed");
+    },
+
+    _onError: function() {
+      console.log("Websocket error");
+    },
+
+    _handleChatMessage: function(data) {
+      this.push('chatlog', {username: data.username, message: data.contents});
+      this.fire('message', {data: data});
+    },
+  });
+  </script>
+</dom-module>

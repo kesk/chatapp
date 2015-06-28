@@ -1,6 +1,5 @@
 (ns chatapp.core
   (:require [chatapp.chat :as chat]
-            [chatapp.common :refer [render-template]]
             [clojure.tools.logging :as log]
             [compojure.core :as compojure :refer [GET defroutes]]
             [compojure.route :as route]
@@ -11,13 +10,15 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.session :refer [wrap-session]]
+            [ring.util.response :as response]
             [selmer.parser :as selmer])
   (:gen-class))
 
 (defroutes app-routes
-  (GET "/" [] (render-template "login.html" {}))
+  (GET "/" [] (response/resource-response "index.html" {:root "public"}))
+  (route/files "/bower_components" {:root "./resources/bower_components"})
+  (route/resources "/")
   (compojure/context "/chat" [] chat/chat-routes)
-  (route/resources "/static")
   (route/not-found "<p>Page not found.</p>"))
 
 (defn- wrap-request-logging

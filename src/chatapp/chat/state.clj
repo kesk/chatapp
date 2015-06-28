@@ -10,6 +10,10 @@
       (recur)
       new-uuid)))
 
+(defn get-client
+  [id]
+  (get @client-db id))
+
 (defn add-client
   [id nick & attrs]
   (dosync
@@ -21,10 +25,6 @@
         (alter nick-db assoc nick id)
         (alter client-db assoc id client)
         client))))
-
-(defn get-client
-  [id]
-  (get @client-db id))
 
 (defn get-client-attr
   [id attr]

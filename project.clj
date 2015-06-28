@@ -16,6 +16,14 @@
                  [environ "1.0.0"]
                  [org.clojure/test.check "0.6.2"]
                  [digest "1.4.4"]]
+  :bower-dependencies [[polymer "Polymer/polymer#^1.0.3"]
+                       [paper-header-panel "PolymerElements/paper-header-panel#^1.0.0"]
+                       [paper-styles "PolymerElements/paper-styles#^1.0.5"]
+                       [paper-material "PolymerElements/paper-material#^1.0.0"]
+                       [paper-input "PolymerElements/paper-input#^1.0.3"]
+                       [iron-form "PolymerElements/iron-form#^1.0.3"]]
+  :bower {:directory "resources/bower_components"}
+  :plugins [[lein-bower "0.5.1"]]
   :main chatapp.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}

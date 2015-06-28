@@ -1,0 +1,46 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<dom-module id="chat-view">
+
+  <style>
+    ul {
+      list-style-type: none;
+      margin: 0px 0px 0px 0px;
+      padding: 0px 0px 0px 0px;
+    }
+    .username {
+      font-weight: bold;
+    }
+    .message {
+    }
+  </style>
+
+  <template>
+    <ul>
+      <template is="dom-repeat" items="{{log}}" on-dom-change="_handleDomChange">
+      <li>
+        <span class="username">{{item.username}}</span>: <span class="message">{{item.message}}</span>
+      </li>
+      </template>
+    </ul>
+  </template>
+
+  <script>
+    Polymer({
+      is: "chat-view",
+      ready: function() {
+      },
+
+      properties: {
+        log: {
+          type: Array,
+          value: function() { return []; },
+          notify: true,
+        }
+      },
+
+      _handleDomChange: function(event) {
+        this.fire("message-added");
+      }
+    });
+  </script>
+</dom-module>
